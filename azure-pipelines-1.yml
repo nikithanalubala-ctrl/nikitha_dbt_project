@@ -1,6 +1,14 @@
 trigger:
 - main
 
+schedules:
+- cron: "15 5 * * *"
+  displayName: "Daily 10:45 AM IST Run"
+  branches:
+    include:
+      - main
+  always: true
+
 variables:
 - group: new_group
 
@@ -14,17 +22,11 @@ steps:
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '3.11'
-  displayName: 'Use Python'
 
 - script: |
     python -m pip install --upgrade pip
     pip install dbt-core==1.12.0 dbt-databricks==1.10.9
-  displayName: 'Install dbt'
-
-- script: |
-    pwd
-    ls -la
-  displayName: 'Verify Repository'
+  displayName: Install dbt
 
 - script: |
     mkdir -p ~/.dbt
@@ -42,16 +44,14 @@ steps:
           token: $(DATABRICKS_TOKEN)
           threads: 1
     EOF
-  displayName: 'Create profiles.yml'
+  displayName: Create profiles.yml
 
-- script: |
-    dbt debug
-  displayName: 'Test Databricks Connection'
+- script: dbt debug
+  displayName: Test Connection
 
-- script: |
-    dbt deps
-  displayName: 'Install Packages'
+- script: dbt deps
+  displayName: Install Packages
 
-- script: |
-    dbt build
-  displayName: 'Run dbt Project'
+- script: dbt build
+  displayName: Run Incremental Models
+  

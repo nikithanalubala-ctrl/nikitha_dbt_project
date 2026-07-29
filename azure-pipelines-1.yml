@@ -2,8 +2,8 @@ trigger:
 - main
 
 schedules:
-- cron: "45 5 * * *"
-  displayName: "Daily 11:15 AM IST Run"
+- cron: "30 6 * * *"
+  displayName: "Daily 12:00 PM IST Run"
   branches:
     include:
       - main

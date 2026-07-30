@@ -9,49 +9,119 @@ schedules:
       - main
   always: true
 
-variables:
-- group: new_group
+stages:
 
-pool:
-  vmImage: 'ubuntu-latest'
+# ==========================================
+# Stage 1 - Deploy to DEV
+# ==========================================
+- stage: Deploy_DEV
+  displayName: "Deploy to DEV"
 
-steps:
+  variables:
+  - group: new_group
 
-- checkout: self
+  jobs:
+  - job: Build_DEV
+    displayName: "Build DEV"
 
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.11'
+    pool:
+      vmImage: 'ubuntu-latest'
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install dbt-core==1.12.0 dbt-databricks==1.10.9
-  displayName: Install dbt
+    steps:
 
-- script: |
-    mkdir -p ~/.dbt
+    - checkout: self
 
-    cat <<EOF > ~/.dbt/profiles.yml
-    nikitha_dbt_project:
-      target: dev
-      outputs:
-        dev:
-          type: databricks
-          catalog: $(DBT_CATALOG)
-          schema: $(DBT_SCHEMA)
-          host: $(DATABRICKS_HOST)
-          http_path: $(DATABRICKS_HTTP_PATH)
-          token: $(DATABRICKS_TOKEN)
-          threads: 1
-    EOF
-  displayName: Create profiles.yml
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.11'
 
-- script: dbt debug
-  displayName: Test Connection
+    - script: |
+        python -m pip install --upgrade pip
+        pip install dbt-core==1.12.0 dbt-databricks==1.10.9
+      displayName: "Install dbt"
 
-- script: dbt deps
-  displayName: Install Packages
+    - script: |
+        mkdir -p ~/.dbt
 
-- script: dbt build
-  displayName: Run Incremental Models
-  
+        cat <<EOF > ~/.dbt/profiles.yml
+        nikitha_dbt_project:
+          target: dev
+          outputs:
+            dev:
+              type: databricks
+              catalog: $(DBT_CATALOG)
+              schema: $(DBT_SCHEMA)
+              host: $(DATABRICKS_HOST)
+              http_path: $(DATABRICKS_HTTP_PATH)
+              token: $(DATABRICKS_TOKEN)
+              threads: 1
+        EOF
+      displayName: "Create profiles.yml"
+
+    - script: dbt debug
+      displayName: "Test Connection"
+
+    - script: dbt deps
+      displayName: "Install Packages"
+
+    - script: dbt build
+      displayName: "Deploy to DEV"
+
+# ==========================================
+# Stage 2 - Deploy to PROD
+# ==========================================
+- stage: Deploy_PROD
+  displayName: "Deploy to PROD"
+
+  dependsOn: Deploy_DEV
+  condition: succeeded()
+
+  variables:
+  - group: prod_var_group
+
+  jobs:
+  - job: Build_PROD
+    displayName: "Build PROD"
+
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+
+    - checkout: self
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.11'
+
+    - script: |
+        python -m pip install --upgrade pip
+        pip install dbt-core==1.12.0 dbt-databricks==1.10.9
+      displayName: "Install dbt"
+
+    - script: |
+        mkdir -p ~/.dbt
+
+        cat <<EOF > ~/.dbt/profiles.yml
+        nikitha_dbt_project:
+          target: prod
+          outputs:
+            prod:
+              type: databricks
+              catalog: $(DBT_CATALOG)
+              schema: $(DBT_SCHEMA)
+              host: $(DATABRICKS_HOST)
+              http_path: $(DATABRICKS_HTTP_PATH)
+              token: $(DATABRICKS_TOKEN)
+              threads: 1
+        EOF
+      displayName: "Create profiles.yml"
+
+    - script: dbt debug
+      displayName: "Test Connection"
+
+    - script: dbt deps
+      displayName: "Install Packages"
+
+    - script: dbt build
+      displayName: "Deploy to PROD"

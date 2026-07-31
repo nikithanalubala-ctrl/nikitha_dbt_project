@@ -36,7 +36,18 @@ models:
                 values: ['Megamart Manhattan', 'Megamart Brooklyn', 'Megamart Austin', 'Megamart San Jose', 'Megamart Toronto']
               config:
                 severity: warn
-        
-    
-    
-  
+          - relationships:
+              arguments:
+                to: ref('bronze_stores')
+                field: store_sk
+
+
+
+
+
+
+
+
+
+
+

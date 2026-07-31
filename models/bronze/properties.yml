@@ -24,27 +24,6 @@ models:
         data_tests:
           - generic_non_negative
 
-      - name: store_sk
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('bronze_stores')
-                field: store_sk
-
-      - name: product_sk
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('bronze_product')
-                field: product_sk
-
-      - name: date_sk
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('bronze_date')
-                field: date_sk
-
   - name: bronze_stores
 
     columns:

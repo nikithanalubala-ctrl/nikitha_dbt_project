@@ -1,0 +1,54 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+
+- checkout: self
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.11'
+  displayName: 'Use Python'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install dbt-core==1.12.0 dbt-databricks==1.10.9
+  displayName: 'Install dbt'
+
+- script: |
+    pwd
+    ls -la
+  displayName: 'Verify Repository'
+
+- script: |
+    mkdir -p ~/.dbt
+
+    cat <<EOF > ~/.dbt/profiles.yml
+    nikitha_dbt_project:
+      target: dev
+      outputs:
+        dev:
+          type: databricks
+          catalog: $(DBT_CATALOG)
+          schema: $(DBT_SCHEMA)
+          host: $(DATABRICKS_HOST)
+          http_path: $(DATABRICKS_HTTP_PATH)
+          token: $(DATABRICKS_TOKEN)
+          threads: 1
+    EOF
+  displayName: 'Create profiles.yml'
+
+- script: |
+    dbt debug
+  displayName: 'Test Databricks Connection'
+
+- script: |
+    dbt deps
+  displayName: 'Install Packages'
+
+- script: |
+    dbt build
+  displayName: 'Run dbt Project'

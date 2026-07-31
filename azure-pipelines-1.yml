@@ -60,12 +60,18 @@ stages:
 
     - script: dbt debug
       displayName: "Test Connection"
+      env:
+        SOURCE_CATALOG: $(SOURCE_CATALOG)
 
     - script: dbt deps
       displayName: "Install Packages"
+      env:
+        SOURCE_CATALOG: $(SOURCE_CATALOG)
 
     - script: dbt build
       displayName: "Deploy to DEV"
+      env:
+        SOURCE_CATALOG: $(SOURCE_CATALOG)
 
 # ==========================================
 # Stage 2 - Deploy to PROD
@@ -119,9 +125,15 @@ stages:
 
     - script: dbt debug
       displayName: "Test Connection"
+      env:
+        SOURCE_CATALOG: $(SOURCE_CATALOG)
 
     - script: dbt deps
       displayName: "Install Packages"
+      env:
+        SOURCE_CATALOG: $(SOURCE_CATALOG)
 
     - script: dbt build
       displayName: "Deploy to PROD"
+      env:
+        SOURCE_CATALOG: $(SOURCE_CATALOG)

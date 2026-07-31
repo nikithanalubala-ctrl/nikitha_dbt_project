@@ -9,45 +9,59 @@ models:
   - name: bronze_product
     config:
       materialized: view
-    
+
   - name: bronze_sales
     config:
       materialized: view
+
     columns:
       - name: sales_id
         data_tests:
           - unique
           - not_null
+
       - name: gross_amount
         data_tests:
           - generic_non_negative
-             
 
-  - name: bronze_stores
-    columns:
       - name: store_sk
         data_tests:
-          - unique
-          - not_null
-      - name: store_name
-        data_tests:
-          - accepted_values:
-              arguments:
-                values: ['Megamart Manhattan', 'Megamart Brooklyn', 'Megamart Austin', 'Megamart San Jose', 'Megamart Toronto']
-              config:
-                severity: warn
           - relationships:
               arguments:
                 to: ref('bronze_stores')
                 field: store_sk
 
+      - name: product_sk
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('bronze_product')
+                field: product_sk
 
+      - name: date_sk
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('bronze_date')
+                field: date_sk
 
+  - name: bronze_stores
 
+    columns:
+      - name: store_sk
+        data_tests:
+          - unique
+          - not_null
 
-
-
-
-
-
-
+      - name: store_name
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - "MegaMart Manhattan"
+                  - "MegaMart Brooklyn"
+                  - "MegaMart Austin"
+                  - "MegaMart San Jose"
+                  - "MegaMart Toronto"
+              config:
+                severity: warn

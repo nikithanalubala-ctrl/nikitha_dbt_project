@@ -1,13 +1,13 @@
 trigger:
-- main
+  - main
 
 schedules:
-- cron: "30 6 * * *"
-  displayName: "Daily 12:00 PM IST Run"
-  branches:
-    include:
-      - main
-  always: true
+  - cron: "30 6 * * *"
+    displayName: "Daily 12:00 PM IST Run"
+    branches:
+      include:
+        - main
+    always: true
 
 stages:
 
@@ -19,92 +19,92 @@ stages:
   displayName: "Deploy to DEV"
 
   variables:
-  - group: new_group
+    - group: new_group
 
   jobs:
-  - job: Build_DEV
-    displayName: "Build DEV"
+    - job: Build_DEV
+      displayName: "Build DEV"
 
-    pool:
-      vmImage: 'ubuntu-latest'
+      pool:
+        vmImage: 'ubuntu-latest'
 
-    steps:
+      steps:
 
-    # --------------------------------------------------------
-    # Checkout Repository
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Checkout Repository
+        # --------------------------------------------------------
 
-    - checkout: self
+        - checkout: self
 
-    # --------------------------------------------------------
-    # Install Python
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Install Python
+        # --------------------------------------------------------
 
-    - task: UsePythonVersion@0
-      displayName: "Use Python 3.11"
-      inputs:
-        versionSpec: '3.11'
+        - task: UsePythonVersion@0
+          displayName: "Use Python 3.11"
+          inputs:
+            versionSpec: '3.11'
 
-    # --------------------------------------------------------
-    # Install dbt
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Install dbt
+        # --------------------------------------------------------
 
-    - script: |
-        python -m pip install --upgrade pip
-        pip install dbt-core==1.12.0 dbt-databricks==1.10.9
-      displayName: "Install dbt"
+        - script: |
+            python -m pip install --upgrade pip
+            pip install dbt-core==1.12.0 dbt-databricks==1.10.9
+          displayName: "Install dbt"
 
-    # --------------------------------------------------------
-    # Create dbt profiles.yml
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Create dbt profiles.yml
+        # --------------------------------------------------------
 
-    - script: |
-        mkdir -p ~/.dbt
+        - script: |
+            mkdir -p ~/.dbt
 
-        cat <<EOF > ~/.dbt/profiles.yml
-        nikitha_dbt_project:
-          target: dev
-          outputs:
-            dev:
-              type: databricks
-              catalog: $(DBT_CATALOG)
-              schema: $(DBT_SCHEMA)
-              host: $(DATABRICKS_HOST)
-              http_path: $(DATABRICKS_HTTP_PATH)
-              token: "{{ env_var('DATABRICKS_TOKEN') }}"
-              threads: 1
-        EOF
-      displayName: "Create DEV profiles.yml"
+            cat <<EOF > ~/.dbt/profiles.yml
+            nikitha_dbt_project:
+              target: dev
+              outputs:
+                dev:
+                  type: databricks
+                  catalog: $(DBT_CATALOG)
+                  schema: $(DBT_SCHEMA)
+                  host: $(DATABRICKS_HOST)
+                  http_path: $(DATABRICKS_HTTP_PATH)
+                  token: "{{ env_var('DATABRICKS_TOKEN') }}"
+                  threads: 1
+            EOF
+          displayName: "Create DEV profiles.yml"
 
-    # --------------------------------------------------------
-    # Test Databricks Connection
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Test Databricks Connection
+        # --------------------------------------------------------
 
-    - script: |
-        dbt debug
-      displayName: "Test DEV Databricks Connection"
-      env:
-        DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
+        - script: |
+            dbt debug
+          displayName: "Test DEV Databricks Connection"
+          env:
+            DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
 
-    # --------------------------------------------------------
-    # Install dbt Packages
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Install dbt Packages
+        # --------------------------------------------------------
 
-    - script: |
-        dbt deps
-      displayName: "Install dbt Packages"
-      env:
-        DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
+        - script: |
+            dbt deps
+          displayName: "Install dbt Packages"
+          env:
+            DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
 
-    # --------------------------------------------------------
-    # Build DEV
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Build DEV
+        # --------------------------------------------------------
 
-    - script: |
-        dbt build --target dev
-      displayName: "Deploy to DEV"
-      env:
-        DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
+        - script: |
+            dbt build --target dev
+          displayName: "Deploy to DEV"
+          env:
+            DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
 
 
 # ============================================================
@@ -115,93 +115,92 @@ stages:
   displayName: "Deploy to PROD"
 
   dependsOn: Deploy_DEV
-
   condition: succeeded()
 
   variables:
-  - group: prod_var_group
+    - group: prod_var_group
 
   jobs:
-  - job: Build_PROD
-    displayName: "Build PROD"
+    - job: Build_PROD
+      displayName: "Build PROD"
 
-    pool:
-      vmImage: 'ubuntu-latest'
+      pool:
+        vmImage: 'ubuntu-latest'
 
-    steps:
+      steps:
 
-    # --------------------------------------------------------
-    # Checkout Repository
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Checkout Repository
+        # --------------------------------------------------------
 
-    - checkout: self
+        - checkout: self
 
-    # --------------------------------------------------------
-    # Install Python
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Install Python
+        # --------------------------------------------------------
 
-    - task: UsePythonVersion@0
-      displayName: "Use Python 3.11"
-      inputs:
-        versionSpec: '3.11'
+        - task: UsePythonVersion@0
+          displayName: "Use Python 3.11"
+          inputs:
+            versionSpec: '3.11'
 
-    # --------------------------------------------------------
-    # Install dbt
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Install dbt
+        # --------------------------------------------------------
 
-    - script: |
-        python -m pip install --upgrade pip
-        pip install dbt-core==1.12.0 dbt-databricks==1.10.9
-      displayName: "Install dbt"
+        - script: |
+            python -m pip install --upgrade pip
+            pip install dbt-core==1.12.0 dbt-databricks==1.10.9
+          displayName: "Install dbt"
 
-    # --------------------------------------------------------
-    # Create dbt profiles.yml
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Create dbt profiles.yml
+        # --------------------------------------------------------
 
-    - script: |
-        mkdir -p ~/.dbt
+        - script: |
+            mkdir -p ~/.dbt
 
-        cat <<EOF > ~/.dbt/profiles.yml
-        nikitha_dbt_project:
-          target: prod
-          outputs:
-            prod:
-              type: databricks
-              catalog: $(DBT_CATALOG)
-              schema: $(DBT_SCHEMA)
-              host: $(DATABRICKS_HOST)
-              http_path: $(DATABRICKS_HTTP_PATH)
-              token: "{{ env_var('DATABRICKS_TOKEN') }}"
-              threads: 1
-        EOF
-      displayName: "Create PROD profiles.yml"
+            cat <<EOF > ~/.dbt/profiles.yml
+            nikitha_dbt_project:
+              target: prod
+              outputs:
+                prod:
+                  type: databricks
+                  catalog: $(DBT_CATALOG)
+                  schema: $(DBT_SCHEMA)
+                  host: $(DATABRICKS_HOST)
+                  http_path: $(DATABRICKS_HTTP_PATH)
+                  token: "{{ env_var('DATABRICKS_TOKEN') }}"
+                  threads: 1
+            EOF
+          displayName: "Create PROD profiles.yml"
 
-    # --------------------------------------------------------
-    # Test Databricks Connection
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Test Databricks Connection
+        # --------------------------------------------------------
 
-    - script: |
-        dbt debug
-      displayName: "Test PROD Databricks Connection"
-      env:
-        DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
+        - script: |
+            dbt debug
+          displayName: "Test PROD Databricks Connection"
+          env:
+            DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
 
-    # --------------------------------------------------------
-    # Install dbt Packages
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Install dbt Packages
+        # --------------------------------------------------------
 
-    - script: |
-        dbt deps
-      displayName: "Install dbt Packages"
-      env:
-        DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
+        - script: |
+            dbt deps
+          displayName: "Install dbt Packages"
+          env:
+            DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
 
-    # --------------------------------------------------------
-    # Build PROD
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Build PROD
+        # --------------------------------------------------------
 
-    - script: |
-        dbt build --target prod
-      displayName: "Deploy to PROD"
-      env:
-        DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
+        - script: |
+            dbt build --target prod
+          displayName: "Deploy to PROD"
+          env:
+            DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
